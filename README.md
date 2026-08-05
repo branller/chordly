@@ -1,2 +1,3 @@
 # chordly
-Simple app to store chords from songs and lyrics
+
+Cancionero offline para músicos de parroquia

@@ -1,0 +1,24 @@
+{title: Santo, Santo, Santo}
+{artist: Litúrgico Tradicional}
+{key: G}
+{tempo: 100}
+{time: 4/4}
+{category: Santo}
+
+{start_of_chorus}
+[G]Santo, Santo, [C]Santo es el Se[G]ñor,
+[Em]Dios del Uni[Am]verso.
+[C]Llenos están el [D]cielo y la [G]tierra
+de tu [C]glo[D]ria.
+
+[G]Hosanna, Ho[C]sanna, Ho[G]sanna en el [D]cielo.
+[G]Hosanna, Ho[C]sanna, Ho[G]sanna en el [D]cie[G]lo.
+{end_of_chorus}
+
+{comment: Verso}
+[G]Bendito el que [C]viene en [G]nombre del Se[D]ñor.
+
+{start_of_chorus}
+[G]Hosanna, Ho[C]sanna, Ho[G]sanna en el [D]cielo.
+[G]Hosanna, Ho[C]sanna, Ho[G]sanna en el [D]cie[G]lo.
+{end_of_chorus}
