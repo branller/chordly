@@ -32,6 +32,9 @@ class ParsedSong {
   /// The original raw ChordPro content.
   final String rawContent;
 
+  /// The absolute file path of the source `.cho` file (if loaded from disk).
+  final String? filePath;
+
   const ParsedSong({
     required this.title,
     this.artist = '',
@@ -42,6 +45,7 @@ class ParsedSong {
     this.category,
     this.sections = const [],
     this.rawContent = '',
+    this.filePath,
   });
 
   /// Returns a copy of this song with modified fields.
@@ -55,6 +59,7 @@ class ParsedSong {
     String? category,
     List<SongSection>? sections,
     String? rawContent,
+    String? filePath,
   }) {
     return ParsedSong(
       title: title ?? this.title,
@@ -66,6 +71,7 @@ class ParsedSong {
       category: category ?? this.category,
       sections: sections ?? this.sections,
       rawContent: rawContent ?? this.rawContent,
+      filePath: filePath ?? this.filePath,
     );
   }
 

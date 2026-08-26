@@ -20,7 +20,7 @@ class SongRepositoryImpl implements SongRepository {
 
       final song = parser.parse(content);
 
-      songs.add(song);
+      songs.add(song.copyWith(filePath: file.path));
     }
 
     songs.sort((a, b) => a.title.compareTo(b.title));

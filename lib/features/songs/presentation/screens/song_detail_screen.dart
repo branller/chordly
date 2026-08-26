@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../chordpro/models/parsed_song.dart';
 import '../../../chordpro/transposer/chord_transposer.dart';
+import '../../../../features/song_editor/presentation/screens/song_edit_screen.dart';
+import '../providers/songs_provider.dart';
 import '../widgets/chord_sheet.dart';
 
 /// Detail screen for a single song with chord rendering,
 /// transposition controls, and font size adjustment.
-class SongDetailScreen extends StatefulWidget {
+class SongDetailScreen extends ConsumerStatefulWidget {
   final ParsedSong song;
 
   const SongDetailScreen({super.key, required this.song});
 
   @override
-  State<SongDetailScreen> createState() => _SongDetailScreenState();
+  ConsumerState<SongDetailScreen> createState() => _SongDetailScreenState();
 }
 
-class _SongDetailScreenState extends State<SongDetailScreen> {
+class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
   static const _transposer = ChordTransposer();
 
   /// Current transposition in semitones (−6 to +6).
@@ -27,18 +30,38 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   /// The transposed version of the song.
   late ParsedSong _displaySong;
 
+  /// The base song (may be updated after editing).
+  late ParsedSong _baseSong;
+
   @override
   void initState() {
     super.initState();
-    _displaySong = widget.song;
+    _baseSong = widget.song;
+    _displaySong = _baseSong;
   }
 
   void _updateTranspose(int delta) {
     setState(() {
       _transpose += delta;
       // Re-transpose from original to avoid accumulation errors
-      _displaySong = _transposer.transposeSong(widget.song, _transpose);
+      _displaySong = _transposer.transposeSong(_baseSong, _transpose);
     });
+  }
+
+  Future<void> _openEditor() async {
+    final result = await Navigator.of(context).push<ParsedSong>(
+      MaterialPageRoute(builder: (_) => SongEditScreen(song: _baseSong)),
+    );
+
+    if (result != null) {
+      setState(() {
+        _baseSong = result;
+        _transpose = 0;
+        _displaySong = _baseSong;
+      });
+      // Refresh the song list so it reflects the changes.
+      ref.invalidate(songsProvider);
+    }
   }
 
   void _updateFontSize(double delta) {
@@ -57,14 +80,14 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
         title: Column(
           children: [
             Text(
-              widget.song.title,
+              _baseSong.title,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            if (widget.song.artist.isNotEmpty)
+            if (_baseSong.artist.isNotEmpty)
               Text(
-                widget.song.artist,
+                _baseSong.artist,
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.onSurfaceVariant,
@@ -72,6 +95,13 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
               ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_rounded),
+            tooltip: 'Editar',
+            onPressed: _openEditor,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -88,7 +118,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
             onTransposeReset: () {
               setState(() {
                 _transpose = 0;
-                _displaySong = widget.song;
+                _displaySong = _baseSong;
               });
             },
             onFontDecrease: () => _updateFontSize(-1),
