@@ -99,33 +99,74 @@ class SongsListScreen extends ConsumerWidget {
   }
 }
 
-class _SongsList extends ConsumerWidget {
+class _SongsList extends StatefulWidget {
   final List<ParsedSong> songs;
 
   const _SongsList({required this.songs});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (songs.isEmpty) {
+  State<_SongsList> createState() => _SongsListState();
+}
+
+class _SongsListState extends State<_SongsList> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.songs.isEmpty) {
       return const _EmptySongsView();
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: songs.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final song = songs[index];
+    final query = _searchController.text.trim().toLowerCase();
 
-        return SongCard(
-          song: song,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => SongDetailScreen(song: song)),
-            );
-          },
-        );
-      },
+    final filteredSongs = widget.songs.where((song) {
+      return song.title.toLowerCase().contains(query);
+    }).toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              hintText: 'Buscar canción...',
+              prefixIcon: Icon(Icons.search),
+            ),
+            onChanged: (_) {
+              setState(() {});
+            },
+          ),
+        ),
+
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: filteredSongs.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final song = filteredSongs[index];
+
+              return SongCard(
+                song: song,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => SongDetailScreen(song: song),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
