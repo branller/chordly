@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import '../../../chordpro/writer/chordpro_writer.dart';
 import '../../../chordpro/models/parsed_song.dart';
 import '../../../chordpro/transposer/chord_transposer.dart';
 import '../../../../features/song_editor/presentation/screens/song_edit_screen.dart';
 import '../providers/songs_provider.dart';
 import '../widgets/chord_sheet.dart';
+import '../../../../features/songs/data/datasources/local_song_storage.dart';
 
 /// Detail screen for a single song with chord rendering,
 /// transposition controls, and font size adjustment.
@@ -19,7 +20,20 @@ class SongDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
+  Future<void> _saveTransposition() async {
+    if (_transpose == 0) return;
+    final storage = const LocalSongStorage();
+    final content = _writer.write(_displaySong);
+    await storage.writeContent(_displaySong.filePath!, content);
+    setState(() {
+      _baseSong = _displaySong;
+      _transpose = 0;
+    });
+    ref.invalidate(songsProvider);
+  }
+
   static const _transposer = ChordTransposer();
+  static const _writer = ChordProWriter();
 
   /// Current transposition in semitones (−6 to +6).
   int _transpose = 0;
@@ -123,16 +137,14 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
             },
             onFontDecrease: () => _updateFontSize(-1),
             onFontIncrease: () => _updateFontSize(1),
+            onSaveTranspose: _saveTransposition,
           ),
 
           // ── Chord sheet ──────────────────────────────────────
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: ChordSheet(
-                song: _displaySong,
-                fontSize: _fontSize,
-              ),
+              child: ChordSheet(song: _displaySong, fontSize: _fontSize),
             ),
           ),
         ],
@@ -154,6 +166,7 @@ class _ControlsBar extends StatelessWidget {
   final VoidCallback onTransposeReset;
   final VoidCallback onFontDecrease;
   final VoidCallback onFontIncrease;
+  final VoidCallback onSaveTranspose;
 
   const _ControlsBar({
     required this.transpose,
@@ -167,6 +180,7 @@ class _ControlsBar extends StatelessWidget {
     required this.onTransposeReset,
     required this.onFontDecrease,
     required this.onFontIncrease,
+    required this.onSaveTranspose,
   });
 
   @override
@@ -176,10 +190,7 @@ class _ControlsBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 0.5,
-          ),
+          bottom: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
         ),
       ),
       child: Row(
@@ -228,6 +239,12 @@ class _ControlsBar extends StatelessWidget {
             colorScheme: colorScheme,
           ),
 
+          if (transpose != 0)
+            _ControlButton(
+              icon: Icons.save_rounded,
+              onPressed: onSaveTranspose,
+              colorScheme: colorScheme,
+            ),
           const Spacer(),
 
           // ── Font size controls ────────────────────────────────
